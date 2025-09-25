@@ -1,0 +1,71 @@
+<# 
+ Script: Document-CitrixDaaS.ps1
+ Purpose: Export Citrix DaaS configuration (Resource Locations, Hypervisors, Catalogs, Delivery Groups, Machines).
+ Run on: Citrix Cloud Connector (with Citrix PowerShell SDK installed)
+#>
+
+asnp Citrix*
+
+# Optional: Authenticate to Citrix Cloud (if required)
+# Get-CtxCloudBearerToken -ClientId "<ClientID>" -ClientSecret "<Secret>"
+
+# Collect Resource Locations
+$resourceLocations = Get-ConfigResourceLocation | Select-Object Name, Uid, Enabled
+
+# Collect Hypervisor Connections
+$connections = Get-BrokerHypervisorConnection | 
+    Select-Object Name, HypType, ConnectionAddress, Uid, InMaintenanceMode
+
+# Collect Machine Catalogs
+$catalogs = Get-BrokerCatalog | 
+    Select-Object Name, ProvisioningType, HypervisorConnectionUid, Uid, AllocationType
+
+# Collect Delivery Groups
+$deliveryGroups = Get-BrokerDesktopGroup | 
+    Select-Object Name, Description, Uid, DeliveryType, SessionSupport, PublishedName
+
+# Collect Machines
+$machines = Get-BrokerMachine | 
+    Select-Object MachineName, CatalogName, DesktopGroupName, InMaintenanceMode, PowerState
+
+# Join Catalogs to Hypervisor Connections
+$catalogDetails = $catalogs | ForEach-Object {
+    $conn = $connections | Where-Object { $_.Uid -eq $_.HypervisorConnectionUid }
+    [PSCustomObject]@{
+        CatalogName   = $_.Name
+        Provisioning  = $_.ProvisioningType
+        Allocation    = $_.AllocationType
+        Hypervisor    = $conn.Name
+        HypType       = $conn.HypType
+        Address       = $conn.ConnectionAddress
+    }
+}
+
+# Export to files
+$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$reportPath = "C:\CitrixDaaS-Report-$timestamp"
+
+New-Item -Path $reportPath -ItemType Directory -Force | Out-Null
+
+$resourceLocations | Export-Csv "$reportPath\ResourceLocations.csv" -NoTypeInformation
+$connections       | Export-Csv "$reportPath\Hypervisors.csv" -NoTypeInformation
+$catalogDetails    | Export-Csv "$reportPath\Catalogs.csv" -NoTypeInformation
+$deliveryGroups    | Export-Csv "$reportPath\DeliveryGroups.csv" -NoTypeInformation
+$machines          | Export-Csv "$reportPath\Machines.csv" -NoTypeInformation
+
+# Optionally, create a single HTML report
+$all = @{
+    "ResourceLocations" = $resourceLocations
+    "Hypervisors"       = $connections
+    "Catalogs"          = $catalogDetails
+    "DeliveryGroups"    = $deliveryGroups
+    "Machines"          = $machines
+}
+
+$html = foreach ($section in $all.Keys) {
+    "<h2>$section</h2>" +
+    ($all[$section] | ConvertTo-Html -Fragment | Out-String)
+}
+$html | Out-File "$reportPath\CitrixDaaS-Report.html"
+
+Write-Host "Citrix DaaS documentation exported to $reportPath"
