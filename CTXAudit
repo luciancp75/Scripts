@@ -9,24 +9,17 @@ asnp Citrix*
 # Optional: Authenticate to Citrix Cloud (if required)
 # Get-CtxCloudBearerToken -ClientId "<ClientID>" -ClientSecret "<Secret>"
 
-# Collect Resource Locations
-$resourceLocations = Get-ConfigResourceLocation | Select-Object Name, Uid, Enabled
-
 # Collect Hypervisor Connections
-$connections = Get-BrokerHypervisorConnection | 
-    Select-Object Name, HypType, ConnectionAddress, Uid, InMaintenanceMode
+$connections = Get-BrokerHypervisorConnection | Select-Object Name, HypType, ConnectionAddress, Uid, InMaintenanceMode
 
 # Collect Machine Catalogs
-$catalogs = Get-BrokerCatalog | 
-    Select-Object Name, ProvisioningType, HypervisorConnectionUid, Uid, AllocationType
+$catalogs = Get-BrokerCatalog | Select-Object Name, ProvisioningType, HypervisorConnectionUid, Uid, AllocationType
 
 # Collect Delivery Groups
-$deliveryGroups = Get-BrokerDesktopGroup | 
-    Select-Object Name, Description, Uid, DeliveryType, SessionSupport, PublishedName
+$deliveryGroups = Get-BrokerDesktopGroup | Select-Object Name, Description, Uid, DeliveryType, SessionSupport, PublishedName
 
 # Collect Machines
-$machines = Get-BrokerMachine | 
-    Select-Object MachineName, CatalogName, DesktopGroupName, InMaintenanceMode, PowerState
+$machines = Get-BrokerMachine | Select-Object MachineName, AssociatedUserNames, OSType, CatalogName, DesktopGroupName, InMaintenanceMode, PowerState, RegistrationState
 
 # Join Catalogs to Hypervisor Connections
 $catalogDetails = $catalogs | ForEach-Object {
@@ -47,7 +40,6 @@ $reportPath = "C:\CitrixDaaS-Report-$timestamp"
 
 New-Item -Path $reportPath -ItemType Directory -Force | Out-Null
 
-$resourceLocations | Export-Csv "$reportPath\ResourceLocations.csv" -NoTypeInformation
 $connections       | Export-Csv "$reportPath\Hypervisors.csv" -NoTypeInformation
 $catalogDetails    | Export-Csv "$reportPath\Catalogs.csv" -NoTypeInformation
 $deliveryGroups    | Export-Csv "$reportPath\DeliveryGroups.csv" -NoTypeInformation
