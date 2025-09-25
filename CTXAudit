@@ -13,13 +13,13 @@ asnp Citrix*
 $connections = Get-BrokerHypervisorConnection | Select-Object Name, HypType, ConnectionAddress, Uid, InMaintenanceMode
 
 # Collect Machine Catalogs
-$catalogs = Get-BrokerCatalog | Select-Object Name, ProvisioningType, HypervisorConnectionUid, Uid, AllocationType
+$catalogs = Get-BrokerCatalog  -MaxRecordCount 1000 | Select-Object Name, ProvisioningType, HypervisorConnectionUid, Uid, AllocationType
 
 # Collect Delivery Groups
 $deliveryGroups = Get-BrokerDesktopGroup | Select-Object Name, Description, Uid, DeliveryType, SessionSupport, PublishedName
 
 # Collect Machines
-$machines = Get-BrokerMachine | Select-Object MachineName, AssociatedUserNames, OSType, CatalogName, DesktopGroupName, InMaintenanceMode, PowerState, RegistrationState
+$machines = Get-BrokerMachine -MaxRecordCount 100000| Select-Object MachineName, AssociatedUserNames, OSType, CatalogName, DesktopGroupName, InMaintenanceMode, PowerState, RegistrationState
 
 # Join Catalogs to Hypervisor Connections
 $catalogDetails = $catalogs | ForEach-Object {
@@ -47,7 +47,6 @@ $machines          | Export-Csv "$reportPath\Machines.csv" -NoTypeInformation
 
 # Optionally, create a single HTML report
 $all = @{
-    "ResourceLocations" = $resourceLocations
     "Hypervisors"       = $connections
     "Catalogs"          = $catalogDetails
     "DeliveryGroups"    = $deliveryGroups
