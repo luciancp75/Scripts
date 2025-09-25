@@ -1,7 +1,7 @@
 <# 
  Script: Document-CitrixDaaS.ps1
- Purpose: Export Citrix DaaS configuration (Resource Locations, Hypervisors, Catalogs, Delivery Groups, Machines).
- Run on: Citrix Cloud Connector (with Citrix PowerShell SDK installed)
+ Purpose: Export Citrix DaaS configuration (Hypervisors, Catalogs, Delivery Groups, Machines).
+ Run on: a machine with Citrix PowerShell SDK installed
 #>
 
 asnp Citrix*
@@ -19,7 +19,7 @@ $catalogs = Get-BrokerCatalog  -MaxRecordCount 1000 | Select-Object Name, Provis
 $deliveryGroups = Get-BrokerDesktopGroup | Select-Object Name, Description, Uid, DeliveryType, SessionSupport, PublishedName
 
 # Collect Machines
-$machines = Get-BrokerMachine -MaxRecordCount 100000| Select-Object MachineName, AssociatedUserNames, OSType, CatalogName, DesktopGroupName, InMaintenanceMode, PowerState, RegistrationState
+$machines = Get-BrokerMachine -MaxRecordCount 100000 | Select-Object MachineName, AssociatedUserNames, OSType, CatalogName, DesktopGroupName, InMaintenanceMode, PowerState, RegistrationState
 
 # Join Catalogs to Hypervisor Connections
 $catalogDetails = $catalogs | ForEach-Object {
