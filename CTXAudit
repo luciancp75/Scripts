@@ -36,7 +36,7 @@ $catalogDetails = $catalogs | ForEach-Object {
 
 # Export to files
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$reportPath = "C:\CitrixDaaS-Report-$timestamp"
+$reportPath = "C:\Temp\CitrixDaaS-Report-$timestamp"
 
 New-Item -Path $reportPath -ItemType Directory -Force | Out-Null
 
